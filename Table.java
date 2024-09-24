@@ -84,7 +84,7 @@ public class Table
     /**
      * The map type to be used for indices. Change as needed.
      */
-    private static final MapType mType = MapType.NO_MAP;
+    private static final MapType mType = MapType.BPTREE_MAP;
 
     /**
      * **********************************************************************************
@@ -100,8 +100,8 @@ public class Table
                 new HashMap<>();
             // case LINHASH_MAP ->
             //     new LinHashMap<>(KeyType.class, Comparable[].class);
-            // case BPTREE_MAP ->
-            //     new BpTreeMap<>(KeyType.class, Comparable[].class);
+            case BPTREE_MAP ->
+                new BpTreeMap<>(KeyType.class, Comparable[].class);
             default ->
                 null;
         }; // switch
@@ -338,7 +338,15 @@ public class Table
 
         List<Comparable[]> rows = new ArrayList<>();
 
-        //  T O   B E   I M P L E M E N T E D  - Project 2
+         if (index == null) {
+            out.println("Index is null, cannot perform indexed select.");
+        } else {
+            Comparable[] row = index.get(keyVal);  
+            if (row != null) {
+                rows.add(row); 
+            }
+        }
+
         return new Table(name + count++, attribute, domain, key, rows);
     } // select
 
@@ -597,7 +605,32 @@ public class Table
      */
     public boolean insert(Comparable[] tup) {
         out.println(STR."DML> insert into \{name} values (\{Arrays.toString(tup)})");
+        if (typeCheck(tup)) {
+            tuples.add(tup); // Add the tuple to the list of tuples
+            
+            var keyVal = new Comparable[key.length];
+            var cols = match(key); 
+    
+            for (var j = 0; j < keyVal.length; j++) {
+                keyVal[j] = tup[cols[j]]; 
+            }
+    
+            // If the map type is not NO_MAP, insert into the index
+            if (mType != MapType.NO_MAP) {
+                KeyType key = new KeyType(keyVal); 
+                if (index.containsKey(key)) {
+                    out.println("Duplicate key found: " + key);
+                    return false; 
+                } else {
+                    index.put(key, tup); 
+                }
+            }
+            return true; 
+        } else {
+            return false; 
+        }
 
+        /* 
         if (typeCheck(tup)) {
             tuples.add(tup);
             var keyVal = new Comparable[key.length];
@@ -612,6 +645,8 @@ public class Table
         } else {
             return false;
         } // if
+         */
+
     } // insert
 
     /**
