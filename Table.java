@@ -186,24 +186,23 @@ public class Table
     // Public Methods
     //----------------------------------------------------------------------------------
     /**
-     * **********************************************************************************
-     * Project the tuples onto a lower dimension by keeping only the given
-     * attributes. Check whether the original key is included in the projection.
-     *
-     * #usage movie.project ("title year studioNo")
-     *
-     * @param attributes the attributes to project onto
-     * @return a table of projected tuples
-     */
+    * **********************************************************************************
+    * Project the tuples onto a lower dimension by keeping only the given
+    * attributes. Check whether the original key is included in the projection.
+    *
+    * #usage movie.project ("title year studioNo")
+    *
+    * @param attributes the attributes to project onto
+    * @return a table of projected tuples
+    */
     public Table project(String attributes) {
         out.println("RA> " + name + ".project (" + attributes + ")");
         var attrs = attributes.split(" ");
         var colDomain = extractDom(match(attrs), domain);
         var newKey = (Arrays.asList(attrs).containsAll(Arrays.asList(key))) ? key : attrs;
 
-        List<Comparable[]> rows = new ArrayList<>();
+        Set<List<Comparable>> uniqueRows = new HashSet<>();  // To track unique projected rows
 
-        //  T O   B E   I M P L E M E N T E D 
         // Iterate over each row in the current table's data 
         for (var row : this.tuples) {
             // Create a new row array for the projected attributes
@@ -211,12 +210,18 @@ public class Table
 
             // Fill the new row with values from the original row based on the projected attributes
             for (int i = 0; i < attrs.length; i++) {
-                int colIndex = col(attrs[i]);  // Get the index of the current attribute in the original table
-                newRow[i] = row[colIndex];  // Copy the value to the new row
+                int colIndex = col(attrs[i]);  
+                newRow[i] = row[colIndex];    
             }
-            // Add the new row to the list of projected rows
-            rows.add(newRow);
+
+            // Convert the array to a List and add it to the set (this eliminates duplicates)
+            uniqueRows.add(Arrays.asList(newRow));
         }
+
+        // Convert the Set back to a List of arrays for the final table
+        List<Comparable[]> rows = uniqueRows.stream()
+                                            .map(list -> list.toArray(new Comparable[0]))
+                                            .collect(Collectors.toList());
 
         return new Table(name + count++, attrs, colDomain, newKey, rows);
     } // project
