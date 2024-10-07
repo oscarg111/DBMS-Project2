@@ -186,15 +186,15 @@ public class Table
     // Public Methods
     //----------------------------------------------------------------------------------
     /**
-    * **********************************************************************************
-    * Project the tuples onto a lower dimension by keeping only the given
-    * attributes. Check whether the original key is included in the projection.
-    *
-    * #usage movie.project ("title year studioNo")
-    *
-    * @param attributes the attributes to project onto
-    * @return a table of projected tuples
-    */
+     * **********************************************************************************
+     * Project the tuples onto a lower dimension by keeping only the given
+     * attributes. Check whether the original key is included in the projection.
+     *
+     * #usage movie.project ("title year studioNo")
+     *
+     * @param attributes the attributes to project onto
+     * @return a table of projected tuples
+     */
     public Table project(String attributes) {
         out.println("RA> " + name + ".project (" + attributes + ")");
         var attrs = attributes.split(" ");
@@ -210,8 +210,8 @@ public class Table
 
             // Fill the new row with values from the original row based on the projected attributes
             for (int i = 0; i < attrs.length; i++) {
-                int colIndex = col(attrs[i]);  
-                newRow[i] = row[colIndex];    
+                int colIndex = col(attrs[i]);
+                newRow[i] = row[colIndex];
             }
 
             // Convert the array to a List and add it to the set (this eliminates duplicates)
@@ -220,8 +220,8 @@ public class Table
 
         // Convert the Set back to a List of arrays for the final table
         List<Comparable[]> rows = uniqueRows.stream()
-                                            .map(list -> list.toArray(new Comparable[0]))
-                                            .collect(Collectors.toList());
+                .map(list -> list.toArray(new Comparable[0]))
+                .collect(Collectors.toList());
 
         return new Table(name + count++, attrs, colDomain, newKey, rows);
     } // project
@@ -260,15 +260,15 @@ public class Table
 
         var token = condition.split(" ");
         var colNo = col(token[0]);
-    
-        var operator = token[1]; 
-        var value = token[2]; 
-        
-            for (var t : tuples) {
-                if (satifies(t, colNo, operator, value)) {
-                    rows.add(t);
-                }
-            } // for
+
+        var operator = token[1];
+        var value = token[2];
+
+        for (var t : tuples) {
+            if (satifies(t, colNo, operator, value)) {
+                rows.add(t);
+            }
+        } // for
 
         return new Table(name + count++, attribute, domain, key, rows);
     } // select
@@ -343,12 +343,12 @@ public class Table
 
         List<Comparable[]> rows = new ArrayList<>();
 
-         if (index == null) {
+        if (index == null) {
             out.println("Index is null, cannot perform indexed select.");
         } else {
-            Comparable[] row = index.get(keyVal);  
+            Comparable[] row = index.get(keyVal);
             if (row != null) {
-                rows.add(row); 
+                rows.add(row);
             }
         }
 
@@ -486,14 +486,78 @@ public class Table
      * @return a table with tuples satisfying the condition
      */
     public Table join(String condition, Table table2) {
-        out.println(STR."RA> \{name}.join (\{condition}, \{table2.name})");
+        out.println(STR."RA> " + name + ".join (" + condition + ", " + table2.name + ")");
 
+        // Split the condition into parts, assuming the condition is in the form "attribute1 <op> attribute2"
+        String[] conditionParts = condition.split(" ");
+        String attribute1 = conditionParts[0];
+        String operator = conditionParts[1];
+        String attribute2 = conditionParts[2];
+
+        // Get attribute indexes in both tables
+        int index1 = this.getAttributeIndex(attribute1);
+        int index2 = table2.getAttributeIndex(attribute2);
+
+        // Handle duplicate attribute names by appending "2" for table2 attributes
+        String[] newAttributes = concat(this.attribute, table2.attribute, table2.name);
+
+        // Result table rows
         var rows = new ArrayList<Comparable[]>();
 
-        //  T O   B E   I M P L E M E N T E D
-        return new Table(name + count++, concat(attribute, table2.attribute),
-                concat(domain, table2.domain), key, rows);
-    } // join
+        // Nested loop join
+        for (Comparable[] row1 : this.tuples) {
+            for (Comparable[] row2 : table2.tuples) {
+                // Compare the values based on the given operator
+                if (compare(row1[index1], operator, row2[index2])) {
+                    // Concatenate the two rows and add to result
+                    rows.add(concat(row1, row2));
+                }
+            }
+        }
+
+        // Return a new table with the joined rows
+        return new Table(name + count++, newAttributes, concat(this.domain, table2.domain), this.key, rows);
+    }
+
+    // Helper method to find the index of an attribute in the table
+    private int getAttributeIndex(String attributeName) {
+        for (int i = 0; i < attribute.length; i++) {
+            if (attribute[i].equals(attributeName)) {
+                return i;
+            }
+        }
+        throw new IllegalArgumentException("Attribute not found: " + attributeName);
+    }
+
+    // Helper method to compare two values based on the operator
+    private boolean compare(Comparable value1, String operator, Comparable value2) {
+        switch (operator) {
+            case "==":
+                return value1.compareTo(value2) == 0;
+            case "!=":
+                return value1.compareTo(value2) != 0;
+            case "<":
+                return value1.compareTo(value2) < 0;
+            case "<=":
+                return value1.compareTo(value2) <= 0;
+            case ">":
+                return value1.compareTo(value2) > 0;
+            case ">=":
+                return value1.compareTo(value2) >= 0;
+            default:
+                throw new IllegalArgumentException("Unsupported operator: " + operator);
+        }
+    }
+
+    // Helper method to concatenate two arrays of attributes, appending "2" to table2 attributes
+    private String[] concat(String[] attr1, String[] attr2, String table2Name) {
+        String[] result = new String[attr1.length + attr2.length];
+        System.arraycopy(attr1, 0, result, 0, attr1.length);
+        for (int i = 0; i < attr2.length; i++) {
+            result[attr1.length + i] = attr2[i] + (Arrays.asList(attr1).contains(attr2[i]) ? "2" : "");
+        }
+        return result;
+    }
 
     /**
      * **********************************************************************************
@@ -612,27 +676,27 @@ public class Table
         out.println(STR."DML> insert into \{name} values (\{Arrays.toString(tup)})");
         if (typeCheck(tup)) {
             tuples.add(tup); // Add the tuple to the list of tuples
-            
+
             var keyVal = new Comparable[key.length];
-            var cols = match(key); 
-    
+            var cols = match(key);
+
             for (var j = 0; j < keyVal.length; j++) {
-                keyVal[j] = tup[cols[j]]; 
+                keyVal[j] = tup[cols[j]];
             }
-    
+
             // If the map type is not NO_MAP, insert into the index
             if (mType != MapType.NO_MAP) {
-                KeyType key = new KeyType(keyVal); 
+                KeyType key = new KeyType(keyVal);
                 if (index.containsKey(key)) {
                     out.println("Duplicate key found: " + key);
-                    return false; 
+                    return false;
                 } else {
-                    index.put(key, tup); 
+                    index.put(key, tup);
                 }
             }
-            return true; 
+            return true;
         } else {
-            return false; 
+            return false;
         }
 
         /* 
@@ -651,7 +715,6 @@ public class Table
             return false;
         } // if
          */
-
     } // insert
 
     /**
