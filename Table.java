@@ -364,30 +364,27 @@ public class Table
      * @param table2 the rhs table in the union operation
      * @return a table representing the union
      */
-    public Table union(Table table2) {
-        out.println(STR."RA> \{name}.union (\{table2.name})");
-        if (!compatible(table2)) {
-            return null;
-        }
+   public Table union (Table table2)
+    {
+        out.println ("RA> " + name + ".union (" + table2.name + ")");
+        //  T O   B E   I M P L E M E N T E D
+        if (! compatible (table2)) return null;
 
-        List<Comparable[]> rows = new ArrayList<>();
+        List <Comparable []> rows = new ArrayList <> ();
 
-        // Add rows from the current table
-        for (Comparable[] tuple : this.tuples) {
-            if (!rows.contains(tuple)) {
-                rows.add(tuple);
+        for(var tup: tuples)rows.add(tup);
+
+        for(var tup:table2.tuples)
+        {
+            boolean copyRow=true;
+            for(var tup1:tuples)
+            {
+                if(this.tuples.contains(tup)) copyRow=false;
             }
+            if(copyRow ==true)
+                rows.add(tup);
         }
-
-        // Add rows from table2
-        for (Comparable[] tuple : table2.tuples) {
-            if (!rows.contains(tuple)) {
-                rows.add(tuple);
-            }
-        }
-
-        return new Table(name + count++, attribute, domain, key, rows);
-
+        return new Table (name + count++, attribute, domain, key, rows);
     } // union
 
     /**
@@ -400,22 +397,18 @@ public class Table
      * @param table2 The rhs table in the minus operation
      * @return a table representing the difference
      */
-    public Table minus(Table table2) {
-        out.println(STR."RA> \{name}.minus (\{table2.name})");
-        if (!compatible(table2)) {
-            return null;
-        }
+    public Table minus (Table table2)
+    {
+        out.println ("RA> " + name + ".minus (" + table2.name + ")");
+        if (! compatible (table2)) return null;
 
-        List<Comparable[]> rows = new ArrayList<>();
+        List <Comparable []> rows = new ArrayList <> ();
 
-        for (Comparable[] tuple : tuples) {
-            if (!table2.tuples.contains(tuple)) {
-                rows.add(tuple);
-            }
-        }
+        //  T O   B E   I M P L E M E N T E D 
+        for(var tup:tuples)
+            if(!table2.tuples.contains(tup)) rows.add(tup);
 
-        return new Table(name + count++, attribute, domain, key, rows);
-
+        return new Table (name + count++, attribute, domain, key, rows);
     } // minus
 
     /**
