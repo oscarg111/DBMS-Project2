@@ -214,7 +214,7 @@ public class Table
                 newRow[i] = row[colIndex];
             }
 
-            // Convert the array to a List and add it to the set (this eliminates duplicates)
+            // Convert array to a List and add it to the set (this eliminates duplicates)
             uniqueRows.add(Arrays.asList(newRow));
         }
 
