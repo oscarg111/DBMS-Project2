@@ -341,7 +341,7 @@ public class BpTreeMap <K extends Comparable <K>, V>
         } else {                                                      // handle INTERNAL node level
             rt = insert (key, ref, (Node) n.ref[n.find (key)]);       // recursive call to insert
             if (DEBUG) out.println ("insert: handle internal node level");
-            rt = addI(key, ref, (Node) n.ref[n.find (key)]);
+            rt = addI(rt, key, (Node) n.ref[n.find (key)]);
         } // if
 
         if (DEBUG) printT (root, 0);
