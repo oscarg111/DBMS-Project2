@@ -341,9 +341,7 @@ public class BpTreeMap <K extends Comparable <K>, V>
         } else {                                                      // handle INTERNAL node level
             rt = insert (key, ref, (Node) n.ref[n.find (key)]);       // recursive call to insert
             if (DEBUG) out.println ("insert: handle internal node level");
-
-                //  T O   B E   I M P L E M E N T E D
-
+            rt = addI(key, ref, (Node) n.ref[n.find (key)]);
         } // if
 
         if (DEBUG) printT (root, 0);
@@ -375,10 +373,10 @@ public class BpTreeMap <K extends Comparable <K>, V>
     private Node addI (Node n, K k, Node v)
     {
         Node rt = null;                                               // holder for right sibling rt
-
-                //  T O   B E   I M P L E M E N T E D
-
+        n.add(k, v);
+        if (n.overflow()) rt = n.splitI();
         return rt;
+
     } // addI
     
 //-----------------------------------------------------------------------------------
