@@ -322,31 +322,38 @@ public class BpTreeMap <K extends Comparable <K>, V>
      * @param n    the current node
      * @return  the newly allocated right sibling node of n 
      */
-    @SuppressWarnings("unchecked")
-    private Node insert (K key, V ref, Node n)
-    {
-        out.println ("=============================================================");
-        out.println (STR."insert: key \{key}");
-        out.println ("=============================================================");
+    private Node insert(K key, V value, Node n) {
+    if (n.isLeaf) {
+        // Insert the key-value pair into the leaf node
+        Node newRightSibling = add(n, key, value);
+        
+        // Check if the leaf node was split (newRightSibling is not null)
+        if (newRightSibling != null) {
+            // If the current node is the root, promote a new root
+            if (n == root) {
+                root = new Node(n, n.key[n.keys - 1], newRightSibling);
+            }
+            // Return the new right sibling to indicate a split occurred
+            return newRightSibling;
+        }
+    } else {
+        // For internal nodes, find the child node to recurse into
+        int position = n.find(key);
+        Node childNode = (Node) n.ref[position];
+        
+        // Recursively insert the key-value pair in the appropriate child node
+        Node newChild = insert(key, value, childNode);
+        
+        // If the child node split, handle the insertion of the new key/reference in the current node
+        if (newChild != null) {
+            return addI(n, newChild.key[0], newChild);
+        }
+    }
+    
+    // No split occurred, so return null
+    return null;
+}
 
-        Node rt = null;                                               // holder right sibling node
-
-        if (n.isLeaf) {                                               // handle LEAF node level
-            rt = add (n, key, ref);
-            if (rt != null) {
-                if (n != root) return rt;
-                root = new Node (root, rt.key[0], rt);                // make a new root
-            } // if
-
-        } else {                                                      // handle INTERNAL node level
-            rt = insert (key, ref, (Node) n.ref[n.find (key)]);       // recursive call to insert
-            if (DEBUG) out.println ("insert: handle internal node level");
-            rt = addI(rt, key, (Node) n.ref[n.find (key)]);
-        } // if
-
-        if (DEBUG) printT (root, 0);
-        return rt;                                                    // return right sibling node
-    } // insert
 
     /********************************************************************************
      * Add new key k and value v into LEAF node n.  Upon overflow, split node n,
