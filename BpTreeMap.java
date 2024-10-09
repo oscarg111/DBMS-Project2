@@ -1,23 +1,3 @@
-
-/************************************************************************************
- * @file BpTreeMap.java
- *
- * @author  John Miller
- *
- * compile javac --enable-preview --release 21 BpTreeMap.java
- * run     java --enable-preview BpTreeMap
- *
- * Split Nodes on Overflow
- * Structure for order = 5 (max of 4 keys), upon first split
- * [ . k4 . -- . -- . -- . ]
- *     [ . k1 . k2 . k3 . -- . ]
- *     [ . k4 . k5 . -- . -- . ]
- * Rules: divider key (k4 added to parent in this case) is the smallest key
- *            in the right sub-tree (SMALLEST RIGHT)
- *        split node n into (n, right_sibling_node) with larger half staying in n
- *        internal node split promotes middle key to parent as the divider key
- */
-
 import java.io.*;
 import java.lang.reflect.Array;
 import java.util.*;
@@ -33,22 +13,22 @@ import static java.lang.System.out;
  * the smallest key in its right sub-tree (SMALLEST RIGHT).  Keys in left sub-tree are "<",
  * while keys in right sub-tree are ">=".
  */
-public class BpTreeMap <K extends Comparable <K>, V>
-       extends AbstractMap <K, V>
-       implements Serializable, Cloneable // , SortedMap <K, V>
-{
-    private static final boolean DEBUG = true;                        // debug flag
+public class BpTreeMap<K extends Comparable<K>, V>
+        extends AbstractMap<K, V>
+        implements Serializable, Cloneable {
+    
+    private static final long serialVersionUID = 1L;  // Add serialVersionUID for versioning
+    private static final boolean DEBUG = true;          // debug flag
+    private static final int ORDER = 5;                 // maximum number of children for a B+Tree node.
+    private static final int HALF = (ORDER - 1) / 2;    // half of max keys (floor)
+    private static final int HALFP = ORDER - HALF;      // rest of the keys (half plus)
 
-    private static final int ORDER = 5;                               // maximum number of children for a B+Tree node.
-    private static final int HALF  = (ORDER - 1) / 2;                 // half of max keys (floor)
-    private static final int HALFP = ORDER - HALF;                    // rest of the keys (half plus)
+    private final Class<K> classK;                      // The class for type K.
+    private final Class<V> classV;                      // The class for type V.
 
-    private final Class <K> classK;                                   // The class for type K.
-    private final Class <V> classV;                                   // The class for type V.
-
-//-----------------------------------------------------------------------------------
-// Node inner class
-//-----------------------------------------------------------------------------------
+    //-----------------------------------------------------------------------------------
+    // Node inner class
+    //-----------------------------------------------------------------------------------
 
     /********************************************************************************
      * The `Node` inner class defines nodes that are stored in the B+tree map.
@@ -59,27 +39,27 @@ public class BpTreeMap <K extends Comparable <K>, V>
      * Internal:  r0 -> subtree with keys < k0; r1 -> sub-tree with keys in [k0, k1); etc.
      * Split:     extra room in nodes allows the overflow key to be inserted before split
      */
-    private class Node
-    {
-        boolean   isLeaf;                                             // whether the node is a leaf 
-        int       keys;                                               // number of active keys
-        K []      key;                                                // array of keys
-        Object [] ref;                                                // array of references/pointers
+    private class Node implements Serializable {
+        private static final long serialVersionUID = 1L;  // Add serialVersionUID for versioning
+
+        boolean isLeaf;                                     // whether the node is a leaf 
+        int keys;                                          // number of active keys
+        K[] key;                                          // array of keys
+        Object[] ref;                                     // array of references/pointers
 
         /****************************************************************************
-         * Construct a BpTree node containing keys_ keys
+         * Construct a BpTree node containing 'keys_' keys.
          * @param keys_    number of initial keys
          * @param isLeaf_  whether the node is a leaf
          */
         @SuppressWarnings("unchecked")
-        Node (int keys_, boolean isLeaf_)
-        {
+        Node(int keys_, boolean isLeaf_) {
             isLeaf = isLeaf_;
-            keys   = keys_;
-            key    = (K []) Array.newInstance (classK, ORDER);
-            ref = (isLeaf) ? new Object [ORDER + 1]
-                           : (Node []) Array.newInstance (Node.class, ORDER + 1);
-        } // constructor
+            keys = keys_;
+            key = (K[]) Array.newInstance(classK, ORDER);
+            ref = (isLeaf) ? new Object[ORDER + 1]
+                           : (Node[]) Array.newInstance(Node.class, ORDER + 1);
+        }
 
         /****************************************************************************
          * Construct a new root node with one key (and two references) in it.
